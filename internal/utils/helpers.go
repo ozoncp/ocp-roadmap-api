@@ -1,20 +1,19 @@
 package utils
 
-func SplitSliceToBatches(data []string, batchCount int) [][]string {
-	var output = make([][]string, batchCount)
-
-	lengthData := len(data)
-	batchSize := (lengthData + batchCount - 1) / batchCount
-
-	for i, j := 0, 0; i < lengthData; i, j = i+batchSize, j+1 {
-		step := i + batchSize
-
-		if step > lengthData {
-			step = lengthData
+func SplitSliceToBatches(data []string, batchSize int) [][]string {
+	var chunks [][]string
+	for {
+		if len(data) == 0 {
+			break
 		}
 
-		output[j] = data[i:step]
+		if len(data) < batchSize {
+			batchSize = len(data)
+		}
+
+		chunks = append(chunks, data[0:batchSize])
+		data = data[batchSize:]
 	}
 
-	return output
+	return chunks
 }

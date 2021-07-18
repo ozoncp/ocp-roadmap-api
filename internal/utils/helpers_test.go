@@ -1,32 +1,31 @@
 package utils
 
 import (
-	"strings"
+	"math"
 	"testing"
 )
 
 func TestSplitSliceToBatches(t *testing.T) {
-	expectedData := map[int]string{
-		2: "Some.Long.String For.Testing",
-		3: "Some.Long String.For Testing",
-		5: "Some Long String For Testing",
+	data := map[int][]string{
+		2:  {"a", "b", "c", "d", "e", "f", "a", "b", "c", "d", "e", "f"},
+		3:  {"a", "b", "c", "d", "e", "f", "a", "b", "c", "d", "e", "f"},
+		5:  {"a", "b", "c", "d", "e", "f", "a", "b", "c", "d", "e", "f"},
+		8:  {"a", "b", "c", "d", "e", "f", "a", "b", "c", "d", "e", "f"},
+		10: {"a", "b", "c", "d", "e", "f", "a", "b", "c", "d", "e", "f"},
 	}
-	original := "Some.Long.String.For.Testing"
-	data := strings.Split(original, ".")
 
-	for i, v := range expectedData {
-		result := SplitSliceToBatches(data, i)
-		if len(result) != i {
-			t.Errorf("length of %q element must be %q", i, i)
-		}
-		var r []string
-		for _, val := range result {
-			r = append(r, strings.Join(val, "."))
+	for i, v := range data {
+		countOfBatches := math.Ceil(float64(len(v)) / float64(i))
+		result := SplitSliceToBatches(v, i)
+		if len(result) != int(countOfBatches) {
+			t.Errorf("expected count of batcher is: %q\n got %q", int(countOfBatches), len(result))
 		}
 
-		resString := strings.Join(r, " ")
-		if v != resString {
-			t.Errorf("\nexpected element:\n %q \ngot\n %q", v, resString)
+		lastElementIndex := len(result) - 1
+		for j, r := range result {
+			if len(r) != i && j != lastElementIndex {
+				t.Errorf("expected batch size is %d\n got %d\n in %q", i, len(r), result)
+			}
 		}
 	}
 }
