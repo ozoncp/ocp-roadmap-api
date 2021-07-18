@@ -5,6 +5,36 @@ import (
 	"testing"
 )
 
+func TestFilterByExcept(t *testing.T) {
+	const (
+		EXCEPT_1 = "a"
+		EXCEPT_2 = "b"
+		EXCEPT_3 = "c"
+	)
+
+	data := []string{"z", EXCEPT_1, "y", EXCEPT_2, EXCEPT_3, "yy", "zz", EXCEPT_1}
+	result := FilterByExcept(data)
+
+	for _, v := range result {
+		if v == EXCEPT_1 || v == EXCEPT_2 || v == EXCEPT_3 {
+			t.Errorf("result of filterByExcept should not contain element %q\n", v)
+		}
+	}
+}
+
+func TestContains(t *testing.T) {
+	data := []string{"a", "b", "c"}
+	r := Contains(data, "c")
+	if r != true {
+		t.Errorf("expected data contains %q\n but result is %t\n", "c", true)
+	}
+
+	r = Contains(data, "d")
+	if r != false {
+		t.Errorf("expected data not contains %q\n but result is %t\n", "d", false)
+	}
+}
+
 func TestSwapKeys(t *testing.T) {
 	data := map[string]string{
 		"key":  "val",
