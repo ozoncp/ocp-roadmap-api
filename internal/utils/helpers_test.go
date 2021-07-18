@@ -5,6 +5,22 @@ import (
 	"testing"
 )
 
+func TestSwapKeys(t *testing.T) {
+	data := map[string]string{
+		"key":  "val",
+		"key2": "val2",
+		"key3": "val3",
+		"key5": "val4",
+	}
+
+	result := SwapKeys(data)
+	for i, v := range result {
+		if data[v] != i {
+			t.Errorf("expected key of result must be %q\n got %q\n", data[v], i)
+		}
+	}
+}
+
 func TestSplitSliceToBatches(t *testing.T) {
 	data := map[int][]string{
 		2:  {"a", "b", "c", "d", "e", "f", "a", "b", "c", "d", "e", "f"},

@@ -1,5 +1,14 @@
 package utils
 
+func SwapKeys(data map[string]string) map[string]string {
+	result := make(map[string]string, len(data))
+	for i, v := range data {
+		result[v] = i
+	}
+
+	return result
+}
+
 func SplitSliceToBatches(data []string, batchSize int) [][]string {
 	var chunks [][]string
 	for {
