@@ -3,41 +3,25 @@ package utils
 import (
 	"fmt"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
+	"github.com/stretchr/testify/assert"
 	"math"
 	"os"
 	"testing"
 )
 
-func TestGetFileContent(t *testing.T) {
+func TestOpenFile(t *testing.T) {
 	pwd, err := os.Getwd()
 	if err != nil {
 		t.Errorf("cant get pwd\n")
 	}
 
 	filePath := fmt.Sprintf("%s/testdata/testFile.txt", pwd)
-	data, err := GetFileContent(filePath)
-	if err != nil {
-		t.Errorf("error while get file content, err: %v\n", err)
-	}
+	ok, _ := GetOpenFile(filePath)
+	assert.True(t, ok)
 
-	expectedLengthContent := 3
-	if len(data) != expectedLengthContent {
-		t.Errorf("length data of file %q must be %q\n", filePath, expectedLengthContent)
-	}
-	expectedData := "Sed sit amet sodales purus, id lacinia ante."
-	if data[1] != expectedData {
-		t.Errorf("element %d must be %q, got %q", 1, expectedData, data[1])
-	}
-
-	fp := "some/wrong/path/file.txt"
-	_, err = GetFileContent(fp)
-	if err == nil {
-		t.Fatal("error can not be nil when wrong file")
-	}
-	expectedErrMessage := fmt.Sprintf("error while open file, err: open %s: no such file or directory", fp)
-	if err.Error() != expectedErrMessage {
-		t.Errorf("wrong error message, expected: %q got: %q\n", expectedErrMessage, err.Error())
-	}
+	filePath = fmt.Sprintf("%s/testdata/testFile2.txt", pwd)
+	ok, _ = GetOpenFile(filePath)
+	assert.False(t, ok)
 }
 
 func TestFilterByExcept(t *testing.T) {

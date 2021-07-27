@@ -1,7 +1,6 @@
 package utils
 
 import (
-	"bufio"
 	"errors"
 	"fmt"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
@@ -59,25 +58,28 @@ func SplitSliceToBatches(data []string, batchSize int) [][]string {
 	return chunks
 }
 
-func GetFileContent(filePath string) ([]string, error) {
-	var output []string
-	file, err := os.Open(filePath)
-	if err != nil {
-		return output, errors.New(fmt.Sprintf("error while open file, err: %v", err))
-	}
+func GetOpenFile(filePath string) (bool, error) {
 
-	defer func() {
-		if err := file.Close(); err != nil {
-			log.Fatalf("error while close file %q, err: %v", filePath, err)
+	fileOpen := func(path string) error {
+		file, err := os.Open(path)
+		if err != nil {
+			return errors.New(fmt.Sprintf("error while open file, err: %v", err))
 		}
-	}()
 
-	scanner := bufio.NewScanner(file)
-	for scanner.Scan() {
-		output = append(output, scanner.Text())
+		defer func() {
+			if err := file.Close(); err != nil {
+				log.Fatalf("error while close file %q, err: %v", path, err)
+			}
+		}()
+
+		return nil
 	}
 
-	return output, nil
+	if fileErr := fileOpen(filePath); fileErr != nil {
+		return false, fileErr
+	}
+
+	return true, nil
 }
 
 func SplitToBulks(entities []entity.Roadmap, butchSize uint) [][]entity.Roadmap {
