@@ -5,6 +5,7 @@ package flusher
 import (
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
 	"github.com/ozoncp/ocp-roadmap-api/internal/repo"
+	"github.com/ozoncp/ocp-roadmap-api/internal/utils"
 	"log"
 )
 
@@ -13,18 +14,24 @@ type Flusher interface {
 }
 
 type Flush struct {
-	repo repo.Repo
+	chunkSize uint
+	repo      repo.Repo
 }
 
-func NewFlush(repo repo.Repo) *Flush {
+func NewFlush(chunkSize uint, repo repo.Repo) *Flush {
 	return &Flush{
-		repo: repo,
+		chunkSize: chunkSize,
+		repo:      repo,
 	}
 }
 
 func (f *Flush) Flush(entities []entity.Roadmap) []entity.Roadmap {
-	if e := f.repo.AddEntities(entities); e != nil {
-		log.Fatalf("error while add entities, err: %s\n", e)
+	chunks := utils.SplitToBulks(entities, f.chunkSize)
+
+	for _, v := range chunks {
+		if e := f.repo.AddEntities(v); e != nil {
+			log.Fatalf("error while add entities, err: %s\n", e)
+		}
 	}
 
 	return make([]entity.Roadmap, 0)
