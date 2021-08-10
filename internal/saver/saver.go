@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
 	"github.com/ozoncp/ocp-roadmap-api/internal/flusher"
+	"log"
 	"time"
 )
 
@@ -14,11 +15,10 @@ type Saver interface {
 }
 
 type save struct {
-	ctx      context.Context
-	tick     time.Duration
-	flusher  flusher.Flusher
-	entities []entity.Roadmap
-	buffer   chan entity.Roadmap
+	ctx     context.Context
+	tick    time.Duration
+	flusher flusher.Flusher
+	buffer  chan entity.Roadmap
 }
 
 func NewSaver(ctx context.Context, flusher flusher.Flusher, tick time.Duration, capacity uint) Saver {
@@ -37,23 +37,35 @@ func (s *save) Init() {
 
 		for {
 			select {
-			case e := <-s.buffer:
-				s.entities = append(s.entities, e)
 			case <-ticker.C:
-				s.entities = s.flusher.Flush(s.entities)
+				s.flusher.Flush(s.readChannel())
 			case <-s.ctx.Done():
-				s.entities = s.flusher.Flush(s.entities)
-				close(s.buffer)
+				s.flusher.Flush(s.readChannel())
 				return
 			}
 		}
 	}()
 }
 
+func (s *save) readChannel() []entity.Roadmap {
+	var roadMaps []entity.Roadmap
+	for i := 0; i < len(s.buffer); i++ {
+		roadMaps = append(roadMaps, <-s.buffer)
+	}
+
+	return roadMaps
+}
+
 func (s *save) Save(entity entity.Roadmap) {
+	if len(s.buffer) == cap(s.buffer) {
+		log.Fatalf("channel is full, wait for flush it!\n")
+		return
+	}
+
 	s.buffer <- entity
 }
 
 func (s *save) Close() {
+	close(s.buffer)
 	s.ctx.Done()
 }

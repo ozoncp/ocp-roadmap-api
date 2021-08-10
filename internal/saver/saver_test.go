@@ -24,7 +24,7 @@ var _ = Describe("Saver", func() {
 		ctrl = gomock.NewController(GinkgoT())
 		mFlusher = mocks.NewMockFlusher(ctrl)
 		tick = time.Millisecond * 500
-		ctx, _ = context.WithTimeout(context.Background(), time.Second*10)
+		ctx, _ = context.WithTimeout(context.Background(), time.Second*3)
 		capacity = 10
 		data = []*entity.Roadmap{
 			entity.NewRoadMap(1, 2, "https://somelink-1.com"),
