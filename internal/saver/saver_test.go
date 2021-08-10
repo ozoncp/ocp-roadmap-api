@@ -43,7 +43,7 @@ var _ = Describe("Saver", func() {
 				saver.Save(*v)
 			}
 
-			saver.Close()
+			//saver.Close()
 		})
 	})
 

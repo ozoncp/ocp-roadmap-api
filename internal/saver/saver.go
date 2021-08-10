@@ -15,10 +15,11 @@ type Saver interface {
 }
 
 type save struct {
-	ctx     context.Context
-	tick    time.Duration
-	flusher flusher.Flusher
-	buffer  chan entity.Roadmap
+	ctx      context.Context
+	tick     time.Duration
+	flusher  flusher.Flusher
+	isClosed bool
+	buffer   chan entity.Roadmap
 }
 
 func NewSaver(ctx context.Context, flusher flusher.Flusher, tick time.Duration, capacity uint) Saver {
@@ -62,10 +63,16 @@ func (s *save) Save(entity entity.Roadmap) {
 		return
 	}
 
+	if s.isClosed {
+		log.Fatalf("channel is closed!\n")
+		return
+	}
+
 	s.buffer <- entity
 }
 
 func (s *save) Close() {
 	close(s.buffer)
+	s.isClosed = true
 	s.ctx.Done()
 }
