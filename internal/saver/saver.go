@@ -59,20 +59,18 @@ func (s *save) readChannel() []entity.Roadmap {
 
 func (s *save) Save(entity entity.Roadmap) {
 	if len(s.buffer) == cap(s.buffer) {
-		log.Fatalf("channel is full, wait for flush it!\n")
-		return
+		s.flusher.Flush(s.readChannel())
 	}
 
 	if s.isClosed {
 		log.Fatalf("channel is closed!\n")
-		return
 	}
 
 	s.buffer <- entity
 }
 
 func (s *save) Close() {
-	close(s.buffer)
 	s.isClosed = true
+	close(s.buffer)
 	s.ctx.Done()
 }
