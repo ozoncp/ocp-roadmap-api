@@ -1,0 +1,232 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "api/ocp-roadmap-api/ocp-roadmap-api.proto",
+    "version": "version not set"
+  },
+  "consumes": [
+    "application/json"
+  ],
+  "produces": [
+    "application/json"
+  ],
+  "paths": {
+    "/roadmap": {
+      "get": {
+        "operationId": "OcpRoadmapApi_ListRoadmap",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiListRoadmapResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpRoadmapApi"
+        ]
+      },
+      "post": {
+        "operationId": "OcpRoadmapApi_CreateRoadmap",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiCreateRoadmapResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiCreateRoadmapRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OcpRoadmapApi"
+        ]
+      }
+    },
+    "/roadmap/{id}": {
+      "get": {
+        "operationId": "OcpRoadmapApi_DescribeRoadmap",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiDescribeRoadmapResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpRoadmapApi"
+        ]
+      },
+      "delete": {
+        "operationId": "OcpRoadmapApi_RemoveRoadmap",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiRemoveRoadmapResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          }
+        ],
+        "tags": [
+          "OcpRoadmapApi"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "apiCreateRoadmapRequest": {
+      "type": "object",
+      "properties": {
+        "roadmap": {
+          "$ref": "#/definitions/apiRoadmap"
+        }
+      }
+    },
+    "apiCreateRoadmapResponse": {
+      "type": "object"
+    },
+    "apiDescribeRoadmapResponse": {
+      "type": "object",
+      "properties": {
+        "roadmap": {
+          "$ref": "#/definitions/apiRoadmap"
+        }
+      }
+    },
+    "apiListRoadmapResponse": {
+      "type": "object",
+      "properties": {
+        "roadmaps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiRoadmap"
+          }
+        }
+      }
+    },
+    "apiRemoveRoadmapResponse": {
+      "type": "object",
+      "properties": {
+        "removed": {
+          "type": "boolean"
+        }
+      }
+    },
+    "apiRoadmap": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "userId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "link": {
+          "type": "string"
+        }
+      }
+    },
+    "protobufAny": {
+      "type": "object",
+      "properties": {
+        "type_url": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string",
+          "format": "byte"
+        }
+      }
+    },
+    "runtimeError": {
+      "type": "object",
+      "properties": {
+        "error": {
+          "type": "string"
+        },
+        "code": {
+          "type": "integer",
+          "format": "int32"
+        },
+        "message": {
+          "type": "string"
+        },
+        "details": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/protobufAny"
+          }
+        }
+      }
+    }
+  }
+}

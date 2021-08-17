@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
 	"github.com/ozoncp/ocp-roadmap-api/internal/flusher"
-	"log"
 	"time"
 )
 
@@ -63,7 +62,7 @@ func (s *save) Save(entity entity.Roadmap) {
 	}
 
 	if s.isClosed {
-		log.Fatalf("channel is closed!\n")
+		return
 	}
 
 	s.buffer <- entity

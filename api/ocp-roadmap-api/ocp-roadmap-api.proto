@@ -1,0 +1,68 @@
+syntax="proto3";
+
+import "google/api/annotations.proto";
+
+package ocp.roadmap.api;
+
+option go_package = "github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api;ocp_roadmap_api";
+
+service OcpRoadmapApi {
+  rpc CreateRoadmap(CreateRoadmapRequest) returns (CreateRoadmapResponse) {
+    option (google.api.http) = {
+      post: "/roadmap"
+      body: "*"
+    };
+  }
+
+  rpc DescribeRoadmap(DescribeRoadmapRequest) returns (DescribeRoadmapResponse) {
+    option (google.api.http) = {
+      get: "/roadmap/{id}"
+    };
+  }
+
+  rpc ListRoadmap(ListRoadmapRequest) returns (ListRoadmapResponse) {
+    option (google.api.http) = {
+      get: "/roadmap"
+    };
+  }
+
+  rpc RemoveRoadmap(RemoveRoadmapRequest) returns (RemoveRoadmapResponse) {
+    option (google.api.http) = {
+      delete: "/roadmap/{id}"
+    };
+  }
+}
+
+message Roadmap {
+  uint64 id = 1;
+  uint64 userId = 2;
+  string link = 3;
+}
+
+message CreateRoadmapRequest {
+  Roadmap roadmap = 1;
+}
+message CreateRoadmapResponse {
+}
+
+message DescribeRoadmapRequest {
+  uint64 id = 1;
+}
+message DescribeRoadmapResponse {
+  Roadmap roadmap = 1;
+}
+
+message ListRoadmapRequest {
+  uint64 limit = 1;
+  uint64 offset = 2;
+}
+message ListRoadmapResponse {
+  repeated Roadmap roadmaps = 1;
+}
+
+message RemoveRoadmapRequest {
+  uint64 id = 1;
+}
+message RemoveRoadmapResponse {
+  bool removed = 1;
+}
