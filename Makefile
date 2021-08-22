@@ -13,6 +13,21 @@ run:
 lint:
 	golint ./...
 
+start-db:
+	docker-compose up
+
+stop-db:
+	docker-compose down
+
+# run goose command
+# make goose cmd=create
+# make goos cmd=up
+gc:
+	goose -dir=migrations postgres "postgres://root:root@0.0.0.0:5432/postgres?sslmode=disable" $(cmd)
+
+migrate:
+	make gc cmd=up
+
 .PHONY: build
 build: vendor-proto .generate .build
 
