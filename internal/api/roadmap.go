@@ -23,6 +23,7 @@ func (r *RoadmapAPI) CreateRoadmap(ctx context.Context, request *ocp_roadmap_api
 			request.GetRoadmap().GetId(),
 			request.GetRoadmap().GetUserId(),
 			request.GetRoadmap().GetLink(),
+			request.GetRoadmap().GetCreatedAt().AsTime(),
 		),
 	}
 

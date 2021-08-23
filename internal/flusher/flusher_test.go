@@ -5,6 +5,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
 	"github.com/ozoncp/ocp-roadmap-api/internal/mocks"
+	"time"
 )
 
 var _ = Describe("Flusher", func() {
@@ -21,9 +22,9 @@ var _ = Describe("Flusher", func() {
 		mFlush = mocks.NewMockFlusher(ctrl)
 
 		roadMapList = []entity.Roadmap{
-			*entity.NewRoadMap(1, 2, "some-link"),
-			*entity.NewRoadMap(2, 3, "some-link2"),
-			*entity.NewRoadMap(3, 4, "some-link3"),
+			*entity.NewRoadMap(1, 2, "some-link", time.Now()),
+			*entity.NewRoadMap(2, 3, "some-link2", time.Now()),
+			*entity.NewRoadMap(3, 4, "some-link3", time.Now()),
 		}
 	})
 

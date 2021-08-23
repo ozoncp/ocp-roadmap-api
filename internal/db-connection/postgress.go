@@ -2,18 +2,21 @@ package db_connection
 
 import (
 	"context"
-	"fmt"
-	"github.com/jackc/pgx/v4"
-	"os"
+	"github.com/jmoiron/sqlx"
+	_ "github.com/lib/pq"
+	"github.com/rs/zerolog/log"
 )
 
-func NewPGConnection(ctx context.Context) *pgx.Conn {
-	dsn := "postgres://root:root@0.0.0.0:5432/postgres?sslmode=disable"
-	conn, err := pgx.Connect(ctx, dsn)
+func Connection(ctx context.Context) *sqlx.DB {
+	dsn := "host=0.0.0.0 port=5432 user=root password=root dbname=postgres sslmode=disable"
+	connect, err := sqlx.ConnectContext(ctx, "postgres", dsn)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
-		os.Exit(1)
+		log.Error().Err(err).Msg("error while connection to db")
 	}
 
-	return conn
+	if err = connect.Ping(); err != nil {
+		log.Error().Msgf("error while ping to database, err: %v", err.Error())
+	}
+
+	return connect
 }

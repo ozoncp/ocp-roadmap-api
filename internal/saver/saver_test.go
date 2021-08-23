@@ -27,9 +27,9 @@ var _ = Describe("Saver", func() {
 		ctx, _ = context.WithTimeout(context.Background(), time.Second*3)
 		capacity = 10
 		data = []*entity.Roadmap{
-			entity.NewRoadMap(1, 2, "https://somelink-1.com"),
-			entity.NewRoadMap(2, 3, "https://somelink-2.com"),
-			entity.NewRoadMap(3, 4, "https://somelink-3.com"),
+			entity.NewRoadMap(1, 2, "https://somelink-1.com", time.Now()),
+			entity.NewRoadMap(2, 3, "https://somelink-2.com", time.Now()),
+			entity.NewRoadMap(3, 4, "https://somelink-3.com", time.Now()),
 		}
 	})
 
