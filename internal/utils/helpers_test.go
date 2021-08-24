@@ -7,6 +7,7 @@ import (
 	"math"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestOpenFile(t *testing.T) {
@@ -72,10 +73,10 @@ func TestSwapKeys(t *testing.T) {
 
 func TestConvertToMap(t *testing.T) {
 	data := []entity.Roadmap{
-		*entity.NewRoadMap(1, 1, "link"),
-		*entity.NewRoadMap(2, 2, "link2"),
-		*entity.NewRoadMap(3, 3, "link3"),
-		*entity.NewRoadMap(4, 4, "link4"),
+		*entity.NewRoadMap(1, 1, "link", time.Now()),
+		*entity.NewRoadMap(2, 2, "link2", time.Now()),
+		*entity.NewRoadMap(3, 3, "link3", time.Now()),
+		*entity.NewRoadMap(4, 4, "link4", time.Now()),
 	}
 	result, err := ConvertToMap(data)
 	if err != nil {
@@ -89,8 +90,8 @@ func TestConvertToMap(t *testing.T) {
 	}
 
 	wrongData := []entity.Roadmap{
-		*entity.NewRoadMap(1, 1, "link"),
-		*entity.NewRoadMap(1, 2, "link2"),
+		*entity.NewRoadMap(1, 1, "link", time.Now()),
+		*entity.NewRoadMap(1, 2, "link2", time.Now()),
 	}
 
 	result, err = ConvertToMap(wrongData)
@@ -109,16 +110,16 @@ func TestConvertToMap(t *testing.T) {
 func TestSplitToBulks(t *testing.T) {
 	data := map[int][]entity.Roadmap{
 		1: {
-			*entity.NewRoadMap(1, 1, "link"),
-			*entity.NewRoadMap(2, 2, "link2"),
-			*entity.NewRoadMap(3, 3, "link3"),
-			*entity.NewRoadMap(4, 4, "link4"),
+			*entity.NewRoadMap(1, 1, "link", time.Now()),
+			*entity.NewRoadMap(2, 2, "link2", time.Now()),
+			*entity.NewRoadMap(3, 3, "link3", time.Now()),
+			*entity.NewRoadMap(4, 4, "link4", time.Now()),
 		},
 		2: {
-			*entity.NewRoadMap(1, 1, "link"),
-			*entity.NewRoadMap(2, 2, "link2"),
-			*entity.NewRoadMap(3, 3, "link3"),
-			*entity.NewRoadMap(4, 4, "link4"),
+			*entity.NewRoadMap(1, 1, "link", time.Now()),
+			*entity.NewRoadMap(2, 2, "link2", time.Now()),
+			*entity.NewRoadMap(3, 3, "link3", time.Now()),
+			*entity.NewRoadMap(4, 4, "link4", time.Now()),
 		},
 	}
 
