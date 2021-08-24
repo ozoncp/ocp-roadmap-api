@@ -15,6 +15,20 @@ service OcpRoadmapApi {
     };
   }
 
+  rpc MultiCreateRoadmaps(MultiCreateRoadmapRequest) returns (MultiCreateRoadmapResponse) {
+    option (google.api.http) = {
+      post: "/roadmaps"
+      body: "*"
+    };
+  }
+
+  rpc UpdateRoadmap(UpdateRoadmapRequest) returns (UpdateRoadmapResponse) {
+    option (google.api.http) = {
+      put: "/roadmap/{id}"
+      body: "*"
+    };
+  }
+
   rpc DescribeRoadmap(DescribeRoadmapRequest) returns (DescribeRoadmapResponse) {
     option (google.api.http) = {
       get: "/roadmap/{id}"
@@ -45,6 +59,24 @@ message CreateRoadmapRequest {
   Roadmap roadmap = 1;
 }
 message CreateRoadmapResponse {
+}
+
+message UpdateRoadmapRequest {
+  uint64 id = 1;
+  uint64 userId = 2;
+  string link = 3;
+  google.protobuf.Timestamp createdAt = 4;
+}
+
+message UpdateRoadmapResponse {
+  bool updated = 1;
+}
+
+message MultiCreateRoadmapRequest {
+  repeated Roadmap roadmaps = 1;
+}
+message MultiCreateRoadmapResponse {
+  repeated uint64 roadmaps_ids = 1;
 }
 
 message DescribeRoadmapRequest {

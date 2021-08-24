@@ -35,21 +35,44 @@ var _ = Describe("Roadmap", func() {
 	})
 
 	Context("Test Roadmap Add Multiply Entities", func() {
+		var req *ocp_roadmap_api.MultiCreateRoadmapRequest
+		data := []entity.Roadmap{
+			{1, 2, "https://some-link-test.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+		}
 		BeforeEach(func() {
-			res := sqlmock.NewResult(2, 2)
-			mock.ExpectExec("INSERT INTO roadmap").
-				WithArgs(2, "https://some-link-test.com", now, 4, "https://some-link-test-2.com", now).
-				WillReturnResult(res)
+			var roadMaps []*ocp_roadmap_api.Roadmap
+			for _, v := range data {
+				item := ocp_roadmap_api.Roadmap{
+					Id:        v.Id,
+					UserId:    v.UserId,
+					Link:      v.Link,
+					CreatedAt: timestamppb.New(v.CreatedAt),
+				}
+				roadMaps = append(roadMaps, &item)
+			}
+			req = &ocp_roadmap_api.MultiCreateRoadmapRequest{
+				Roadmaps: roadMaps,
+			}
+
+			rows := sqlmock.NewRows([]string{"id"}).
+				AddRow(1).
+				AddRow(2)
+
+			mock.ExpectQuery("INSERT INTO roadmap").
+				WithArgs(roadMaps[0].UserId, roadMaps[0].Link, roadMaps[0].CreatedAt.AsTime(), roadMaps[1].UserId, roadMaps[1].Link, roadMaps[1].CreatedAt.AsTime()).
+				WillReturnRows(rows)
 
 		})
 
-		It("Test add entities", func() {
-			data := []entity.Roadmap{
-				{1, 2, "https://some-link-test.com", now},
-				{1, 4, "https://some-link-test-2.com", now},
-			}
-			err := rep.AddEntities(ctx, data)
+		It("Test add multi entities", func() {
+			grpcApi := api.NewRoadmapAPI(rep)
+			Expect(grpcApi).ShouldNot(BeNil())
+
+			response, err := grpcApi.MultiCreateRoadmaps(ctx, req)
 			Expect(err).Should(BeNil())
+			Expect(response).ShouldNot(BeNil())
+			Expect(len(response.RoadmapsIds)).Should(BeEquivalentTo(2))
 		})
 	})
 
@@ -66,9 +89,10 @@ var _ = Describe("Roadmap", func() {
 				},
 			}
 
-			mock.ExpectExec("INSERT INTO roadmap").
+			rows := sqlmock.NewRows([]string{"id"})
+			mock.ExpectQuery("INSERT INTO roadmap").
 				WithArgs(req.Roadmap.UserId, req.Roadmap.Link, req.Roadmap.CreatedAt.AsTime()).
-				WillReturnResult(sqlmock.NewResult(1, 1))
+				WillReturnRows(rows)
 
 		})
 
