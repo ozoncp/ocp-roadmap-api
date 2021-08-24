@@ -219,7 +219,13 @@
       }
     },
     "apiCreateRoadmapResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "roadmap_id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
     },
     "apiDescribeRoadmapResponse": {
       "type": "object",

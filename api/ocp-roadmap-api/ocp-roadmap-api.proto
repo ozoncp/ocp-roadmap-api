@@ -59,6 +59,7 @@ message CreateRoadmapRequest {
   Roadmap roadmap = 1;
 }
 message CreateRoadmapResponse {
+  uint64 roadmap_id = 1;
 }
 
 message UpdateRoadmapRequest {

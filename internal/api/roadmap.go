@@ -66,8 +66,8 @@ func (r *RoadmapAPI) CreateRoadmap(ctx context.Context, request *ocp_roadmap_api
 	if err := r.repository.CreateEntity(ctx, roadMap); err != nil {
 		return &ocp_roadmap_api.CreateRoadmapResponse{}, err
 	}
-	log.Info().Msg("Created roadmap")
-	return &ocp_roadmap_api.CreateRoadmapResponse{}, nil
+
+	return &ocp_roadmap_api.CreateRoadmapResponse{RoadmapId: roadMap.Id}, nil
 }
 
 func (r *RoadmapAPI) DescribeRoadmap(ctx context.Context, request *ocp_roadmap_api.DescribeRoadmapRequest) (*ocp_roadmap_api.DescribeRoadmapResponse, error) {
