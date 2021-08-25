@@ -4,11 +4,15 @@ import (
 	"context"
 	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/mock/gomock"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/ozoncp/ocp-roadmap-api/internal/api"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
+	"github.com/ozoncp/ocp-roadmap-api/internal/kafka"
+	"github.com/ozoncp/ocp-roadmap-api/internal/metric"
+	"github.com/ozoncp/ocp-roadmap-api/internal/mocks"
 	"github.com/ozoncp/ocp-roadmap-api/internal/repo"
 	ocp_roadmap_api "github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,18 +24,22 @@ var _ = Describe("Roadmap", func() {
 		db     *sql.DB
 		sqlxDB *sqlx.DB
 		mock   sqlmock.Sqlmock
+		ctrl   *gomock.Controller
+		rep    repo.Repo
+		ctx    context.Context
 
-		rep repo.Repo
-		ctx context.Context
+		mProducer *mocks.MockProducer
 	)
 
 	now := time.Now()
-
+	metric.InitMetrics()
 	BeforeEach(func() {
 		db, mock, _ = sqlmock.New()
 		sqlxDB = sqlx.NewDb(db, "sqlmock")
 		rep = repo.NewRepository(sqlxDB)
 		ctx = context.Background()
+		ctrl = gomock.NewController(GinkgoT())
+		mProducer = mocks.NewMockProducer(ctrl)
 	})
 
 	Context("Test Roadmap Add Multiply Entities", func() {
@@ -66,7 +74,7 @@ var _ = Describe("Roadmap", func() {
 		})
 
 		It("Test add multi entities", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 
 			response, err := grpcApi.MultiCreateRoadmaps(ctx, req)
@@ -97,7 +105,11 @@ var _ = Describe("Roadmap", func() {
 		})
 
 		It("Test add entity", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+
+			eventType := kafka.CreateMessage(kafka.Create, 1)
+			mProducer.EXPECT().Send(eventType).Return(nil).MaxTimes(1)
+
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 			response, err := grpcApi.CreateRoadmap(ctx, req)
 			Expect(err).Should(BeNil())
@@ -116,7 +128,10 @@ var _ = Describe("Roadmap", func() {
 		})
 
 		It("Test delete entity", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+			eventType := kafka.CreateMessage(kafka.Delete, 1)
+			mProducer.EXPECT().Send(eventType).Return(nil).MaxTimes(1)
+
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 			response, err := grpcApi.RemoveRoadmap(ctx, req)
 			Expect(err).Should(BeNil())
@@ -146,7 +161,7 @@ var _ = Describe("Roadmap", func() {
 		})
 
 		It("Test delete entity", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 			response, err := grpcApi.ListRoadmap(ctx, req)
 			Expect(err).Should(BeNil())

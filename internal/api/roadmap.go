@@ -2,20 +2,26 @@ package api
 
 import (
 	"context"
+	"fmt"
+	"github.com/opentracing/opentracing-go"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
+	"github.com/ozoncp/ocp-roadmap-api/internal/kafka"
+	"github.com/ozoncp/ocp-roadmap-api/internal/metric"
 	"github.com/ozoncp/ocp-roadmap-api/internal/repo"
 	"github.com/ozoncp/ocp-roadmap-api/internal/utils"
 	ocp_roadmap_api "github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api"
 	"github.com/rs/zerolog/log"
+	"unsafe"
 )
 
 type RoadmapAPI struct {
 	repository repo.Repo
 	ocp_roadmap_api.UnimplementedOcpRoadmapApiServer
+	producer kafka.Producer
 }
 
-func NewRoadmapAPI(repo repo.Repo) ocp_roadmap_api.OcpRoadmapApiServer {
-	return &RoadmapAPI{repository: repo}
+func NewRoadmapAPI(repo repo.Repo, producer kafka.Producer) ocp_roadmap_api.OcpRoadmapApiServer {
+	return &RoadmapAPI{repository: repo, producer: producer}
 }
 
 func (r *RoadmapAPI) UpdateRoadmap(ctx context.Context, request *ocp_roadmap_api.UpdateRoadmapRequest) (*ocp_roadmap_api.UpdateRoadmapResponse, error) {
@@ -26,13 +32,17 @@ func (r *RoadmapAPI) UpdateRoadmap(ctx context.Context, request *ocp_roadmap_api
 		log.Error().Msgf("error while update roadmap # %v, err: %v", err, request.Id)
 		return response, err
 	}
-
+	r.sendEvent(kafka.Update, request.Id)
+	metric.UpdateCounterInc()
 	response.Updated = updated
 	return response, nil
 }
 
 func (r *RoadmapAPI) MultiCreateRoadmaps(ctx context.Context, request *ocp_roadmap_api.MultiCreateRoadmapRequest) (*ocp_roadmap_api.MultiCreateRoadmapResponse, error) {
 	var data []entity.Roadmap
+	tracer := opentracing.GlobalTracer()
+	span := tracer.StartSpan("MultiCreateRoadmaps")
+	defer span.Finish()
 
 	for _, v := range request.Roadmaps {
 		item := entity.NewRoadMap(v.Id, v.UserId, v.Link, v.CreatedAt.AsTime())
@@ -42,16 +52,21 @@ func (r *RoadmapAPI) MultiCreateRoadmaps(ctx context.Context, request *ocp_roadm
 	response := &ocp_roadmap_api.MultiCreateRoadmapResponse{}
 	bulks := utils.SplitToBulks(data, 3)
 	for i := 0; i < len(bulks); i++ {
+		size := fmt.Sprintf("Size bulk is %d bytes", unsafe.Sizeof(bulks[i]))
+		childSpan := tracer.StartSpan(fmt.Sprintf("MultiCreateRoadmaps_#%d", i), opentracing.ChildOf(span.Context()))
+		childSpan.SetTag("size", size)
+
 		ids, err := r.repository.MultiCreateEntity(ctx, bulks[i])
 		if err != nil {
 			log.Error().Msgf("error while multi create roadmap, err: %v", err)
+			childSpan.Finish()
 			return response, err
 		}
+		childSpan.Finish()
 
 		response.RoadmapsIds = append(response.RoadmapsIds, ids...)
 	}
 
-	log.Info().Msg("Multi Create roadmaps")
 	return response, nil
 }
 
@@ -66,7 +81,8 @@ func (r *RoadmapAPI) CreateRoadmap(ctx context.Context, request *ocp_roadmap_api
 	if err := r.repository.CreateEntity(ctx, roadMap); err != nil {
 		return &ocp_roadmap_api.CreateRoadmapResponse{}, err
 	}
-
+	r.sendEvent(kafka.Create, roadMap.Id)
+	metric.CreateCounterInc()
 	return &ocp_roadmap_api.CreateRoadmapResponse{RoadmapId: roadMap.Id}, nil
 }
 
@@ -114,6 +130,13 @@ func (r *RoadmapAPI) RemoveRoadmap(ctx context.Context, request *ocp_roadmap_api
 	if err := r.repository.RemoveEntity(ctx, request.GetId()); err != nil {
 		return &ocp_roadmap_api.RemoveRoadmapResponse{}, err
 	}
-
+	r.sendEvent(kafka.Delete, request.GetId())
+	metric.DeleteCounterInc()
 	return &ocp_roadmap_api.RemoveRoadmapResponse{Removed: true}, nil
+}
+
+func (r *RoadmapAPI) sendEvent(et kafka.EventType, id uint64) {
+	if err := r.producer.Send(kafka.CreateMessage(et, id)); err != nil {
+		log.Err(err).Msg("error while send message to kafka")
+	}
 }
