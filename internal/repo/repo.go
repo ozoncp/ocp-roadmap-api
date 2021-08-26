@@ -15,7 +15,8 @@ import (
 )
 
 type Repo interface {
-	AddEntities(ctx context.Context, entities []entity.Roadmap) error
+	MultiCreateEntity(ctx context.Context, entities []entity.Roadmap) ([]uint64, error)
+	UpdateEntity(ctx context.Context, entity entity.Roadmap) (bool, error)
 	CreateEntity(ctx context.Context, entity entity.Roadmap) error
 	ListEntities(ctx context.Context, limit, offset uint64) ([]entity.Roadmap, error)
 	DescribeEntity(ctx context.Context, entityId uint64) (*entity.Roadmap, error)
@@ -48,10 +49,39 @@ func (r *Repository) CreateEntity(ctx context.Context, entity entity.Roadmap) er
 	return nil
 }
 
-func (r *Repository) AddEntities(ctx context.Context, entities []entity.Roadmap) error {
+func (r *Repository) UpdateEntity(ctx context.Context, entity entity.Roadmap) (bool, error) {
+	query := squirrel.Update("roadmap").
+		Set("user_id", entity.UserId).
+		Set("link", entity.Link).
+		Set("created_at", entity.CreatedAt).
+		Where(squirrel.Eq{"id": entity.Id}).
+		RunWith(r.db).
+		PlaceholderFormat(squirrel.Dollar)
+
+	result, err := query.ExecContext(ctx)
+	if err != nil {
+		return false, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return false, err
+	}
+
+	if rowsAffected <= 0 {
+		return false, errors.New("not one row updated")
+	}
+
+	return true, nil
+}
+
+func (r *Repository) MultiCreateEntity(ctx context.Context, entities []entity.Roadmap) ([]uint64, error) {
+	var ids []uint64
+
 	query := squirrel.
 		Insert("roadmap").
 		Columns("user_id", "link", "created_at").
+		Suffix("RETURNING \"id\"").
 		RunWith(r.db).
 		PlaceholderFormat(squirrel.Dollar)
 
@@ -59,12 +89,20 @@ func (r *Repository) AddEntities(ctx context.Context, entities []entity.Roadmap)
 		query = query.Values(v.UserId, v.Link, v.CreatedAt)
 	}
 
-	_, err := query.ExecContext(ctx)
+	rows, err := query.QueryContext(ctx)
 	if err != nil {
-		return err
+		return ids, err
 	}
 
-	return nil
+	for rows.Next() {
+		var id uint64
+		if err := rows.Scan(&id); err != nil {
+			return ids, err
+		}
+		ids = append(ids, id)
+	}
+
+	return ids, nil
 }
 
 func (r *Repository) ListEntities(ctx context.Context, limit, offset uint64) ([]entity.Roadmap, error) {

@@ -1,0 +1,21 @@
+roadmap:
+  create-butch-size: 3
+
+database:
+  host: "0.0.0.0"
+  port: 5432
+  user: "root"
+  password: "root"
+  db-name: "postgres"
+  ssl-mode: "disable"
+
+grpc:
+  port: 82
+
+rest:
+  port: 8081
+  endpoint: "localhost:82"
+
+metrics:
+  port: 9100
+  handle: "/metrics"

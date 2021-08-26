@@ -19,6 +19,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type OcpRoadmapApiClient interface {
 	CreateRoadmap(ctx context.Context, in *CreateRoadmapRequest, opts ...grpc.CallOption) (*CreateRoadmapResponse, error)
+	MultiCreateRoadmaps(ctx context.Context, in *MultiCreateRoadmapRequest, opts ...grpc.CallOption) (*MultiCreateRoadmapResponse, error)
+	UpdateRoadmap(ctx context.Context, in *UpdateRoadmapRequest, opts ...grpc.CallOption) (*UpdateRoadmapResponse, error)
 	DescribeRoadmap(ctx context.Context, in *DescribeRoadmapRequest, opts ...grpc.CallOption) (*DescribeRoadmapResponse, error)
 	ListRoadmap(ctx context.Context, in *ListRoadmapRequest, opts ...grpc.CallOption) (*ListRoadmapResponse, error)
 	RemoveRoadmap(ctx context.Context, in *RemoveRoadmapRequest, opts ...grpc.CallOption) (*RemoveRoadmapResponse, error)
@@ -35,6 +37,24 @@ func NewOcpRoadmapApiClient(cc grpc.ClientConnInterface) OcpRoadmapApiClient {
 func (c *ocpRoadmapApiClient) CreateRoadmap(ctx context.Context, in *CreateRoadmapRequest, opts ...grpc.CallOption) (*CreateRoadmapResponse, error) {
 	out := new(CreateRoadmapResponse)
 	err := c.cc.Invoke(ctx, "/ocp.roadmap.api.OcpRoadmapApi/CreateRoadmap", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpRoadmapApiClient) MultiCreateRoadmaps(ctx context.Context, in *MultiCreateRoadmapRequest, opts ...grpc.CallOption) (*MultiCreateRoadmapResponse, error) {
+	out := new(MultiCreateRoadmapResponse)
+	err := c.cc.Invoke(ctx, "/ocp.roadmap.api.OcpRoadmapApi/MultiCreateRoadmaps", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *ocpRoadmapApiClient) UpdateRoadmap(ctx context.Context, in *UpdateRoadmapRequest, opts ...grpc.CallOption) (*UpdateRoadmapResponse, error) {
+	out := new(UpdateRoadmapResponse)
+	err := c.cc.Invoke(ctx, "/ocp.roadmap.api.OcpRoadmapApi/UpdateRoadmap", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,6 +93,8 @@ func (c *ocpRoadmapApiClient) RemoveRoadmap(ctx context.Context, in *RemoveRoadm
 // for forward compatibility
 type OcpRoadmapApiServer interface {
 	CreateRoadmap(context.Context, *CreateRoadmapRequest) (*CreateRoadmapResponse, error)
+	MultiCreateRoadmaps(context.Context, *MultiCreateRoadmapRequest) (*MultiCreateRoadmapResponse, error)
+	UpdateRoadmap(context.Context, *UpdateRoadmapRequest) (*UpdateRoadmapResponse, error)
 	DescribeRoadmap(context.Context, *DescribeRoadmapRequest) (*DescribeRoadmapResponse, error)
 	ListRoadmap(context.Context, *ListRoadmapRequest) (*ListRoadmapResponse, error)
 	RemoveRoadmap(context.Context, *RemoveRoadmapRequest) (*RemoveRoadmapResponse, error)
@@ -85,6 +107,12 @@ type UnimplementedOcpRoadmapApiServer struct {
 
 func (UnimplementedOcpRoadmapApiServer) CreateRoadmap(context.Context, *CreateRoadmapRequest) (*CreateRoadmapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method CreateRoadmap not implemented")
+}
+func (UnimplementedOcpRoadmapApiServer) MultiCreateRoadmaps(context.Context, *MultiCreateRoadmapRequest) (*MultiCreateRoadmapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method MultiCreateRoadmaps not implemented")
+}
+func (UnimplementedOcpRoadmapApiServer) UpdateRoadmap(context.Context, *UpdateRoadmapRequest) (*UpdateRoadmapResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateRoadmap not implemented")
 }
 func (UnimplementedOcpRoadmapApiServer) DescribeRoadmap(context.Context, *DescribeRoadmapRequest) (*DescribeRoadmapResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DescribeRoadmap not implemented")
@@ -122,6 +150,42 @@ func _OcpRoadmapApi_CreateRoadmap_Handler(srv interface{}, ctx context.Context, 
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OcpRoadmapApiServer).CreateRoadmap(ctx, req.(*CreateRoadmapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpRoadmapApi_MultiCreateRoadmaps_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(MultiCreateRoadmapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpRoadmapApiServer).MultiCreateRoadmaps(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.roadmap.api.OcpRoadmapApi/MultiCreateRoadmaps",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpRoadmapApiServer).MultiCreateRoadmaps(ctx, req.(*MultiCreateRoadmapRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _OcpRoadmapApi_UpdateRoadmap_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateRoadmapRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(OcpRoadmapApiServer).UpdateRoadmap(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ocp.roadmap.api.OcpRoadmapApi/UpdateRoadmap",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(OcpRoadmapApiServer).UpdateRoadmap(ctx, req.(*UpdateRoadmapRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -190,6 +254,14 @@ var OcpRoadmapApi_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "CreateRoadmap",
 			Handler:    _OcpRoadmapApi_CreateRoadmap_Handler,
+		},
+		{
+			MethodName: "MultiCreateRoadmaps",
+			Handler:    _OcpRoadmapApi_MultiCreateRoadmaps_Handler,
+		},
+		{
+			MethodName: "UpdateRoadmap",
+			Handler:    _OcpRoadmapApi_UpdateRoadmap_Handler,
 		},
 		{
 			MethodName: "DescribeRoadmap",

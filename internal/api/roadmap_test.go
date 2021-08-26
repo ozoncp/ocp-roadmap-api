@@ -4,11 +4,16 @@ import (
 	"context"
 	"database/sql"
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/mock/gomock"
 	"github.com/jmoiron/sqlx"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/ozoncp/ocp-roadmap-api/internal/api"
+	cnfg "github.com/ozoncp/ocp-roadmap-api/internal/config"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
+	"github.com/ozoncp/ocp-roadmap-api/internal/kafka"
+	"github.com/ozoncp/ocp-roadmap-api/internal/metric"
+	"github.com/ozoncp/ocp-roadmap-api/internal/mocks"
 	"github.com/ozoncp/ocp-roadmap-api/internal/repo"
 	ocp_roadmap_api "github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -20,36 +25,64 @@ var _ = Describe("Roadmap", func() {
 		db     *sql.DB
 		sqlxDB *sqlx.DB
 		mock   sqlmock.Sqlmock
+		ctrl   *gomock.Controller
+		rep    repo.Repo
+		ctx    context.Context
 
-		rep repo.Repo
-		ctx context.Context
+		mProducer *mocks.MockProducer
 	)
+	cnfg.InitConfig("../../config.yml")
 
 	now := time.Now()
-
+	metric.InitMetrics()
 	BeforeEach(func() {
 		db, mock, _ = sqlmock.New()
 		sqlxDB = sqlx.NewDb(db, "sqlmock")
 		rep = repo.NewRepository(sqlxDB)
 		ctx = context.Background()
+		ctrl = gomock.NewController(GinkgoT())
+		mProducer = mocks.NewMockProducer(ctrl)
 	})
 
 	Context("Test Roadmap Add Multiply Entities", func() {
+		var req *ocp_roadmap_api.MultiCreateRoadmapRequest
+		data := []entity.Roadmap{
+			{1, 2, "https://some-link-test.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+		}
 		BeforeEach(func() {
-			res := sqlmock.NewResult(2, 2)
-			mock.ExpectExec("INSERT INTO roadmap").
-				WithArgs(2, "https://some-link-test.com", now, 4, "https://some-link-test-2.com", now).
-				WillReturnResult(res)
+			var roadMaps []*ocp_roadmap_api.Roadmap
+			for _, v := range data {
+				item := ocp_roadmap_api.Roadmap{
+					Id:        v.Id,
+					UserId:    v.UserId,
+					Link:      v.Link,
+					CreatedAt: timestamppb.New(v.CreatedAt),
+				}
+				roadMaps = append(roadMaps, &item)
+			}
+			req = &ocp_roadmap_api.MultiCreateRoadmapRequest{
+				Roadmaps: roadMaps,
+			}
+
+			rows := sqlmock.NewRows([]string{"id"}).
+				AddRow(1).
+				AddRow(2)
+
+			mock.ExpectQuery("INSERT INTO roadmap").
+				WithArgs(roadMaps[0].UserId, roadMaps[0].Link, roadMaps[0].CreatedAt.AsTime(), roadMaps[1].UserId, roadMaps[1].Link, roadMaps[1].CreatedAt.AsTime()).
+				WillReturnRows(rows)
 
 		})
 
-		It("Test add entities", func() {
-			data := []entity.Roadmap{
-				{1, 2, "https://some-link-test.com", now},
-				{1, 4, "https://some-link-test-2.com", now},
-			}
-			err := rep.AddEntities(ctx, data)
+		It("Test add multi entities", func() {
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
+			Expect(grpcApi).ShouldNot(BeNil())
+
+			response, err := grpcApi.MultiCreateRoadmaps(ctx, req)
 			Expect(err).Should(BeNil())
+			Expect(response).ShouldNot(BeNil())
+			Expect(len(response.RoadmapsIds)).Should(BeEquivalentTo(2))
 		})
 	})
 
@@ -66,14 +99,19 @@ var _ = Describe("Roadmap", func() {
 				},
 			}
 
-			mock.ExpectExec("INSERT INTO roadmap").
+			rows := sqlmock.NewRows([]string{"id"})
+			mock.ExpectQuery("INSERT INTO roadmap").
 				WithArgs(req.Roadmap.UserId, req.Roadmap.Link, req.Roadmap.CreatedAt.AsTime()).
-				WillReturnResult(sqlmock.NewResult(1, 1))
+				WillReturnRows(rows)
 
 		})
 
 		It("Test add entity", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+
+			eventType := kafka.CreateMessage(kafka.Create, 1)
+			mProducer.EXPECT().Send(eventType).Return(nil).MaxTimes(1)
+
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 			response, err := grpcApi.CreateRoadmap(ctx, req)
 			Expect(err).Should(BeNil())
@@ -92,7 +130,10 @@ var _ = Describe("Roadmap", func() {
 		})
 
 		It("Test delete entity", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+			eventType := kafka.CreateMessage(kafka.Delete, 1)
+			mProducer.EXPECT().Send(eventType).Return(nil).MaxTimes(1)
+
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 			response, err := grpcApi.RemoveRoadmap(ctx, req)
 			Expect(err).Should(BeNil())
@@ -122,7 +163,7 @@ var _ = Describe("Roadmap", func() {
 		})
 
 		It("Test delete entity", func() {
-			grpcApi := api.NewRoadmapAPI(rep)
+			grpcApi := api.NewRoadmapAPI(rep, mProducer)
 			Expect(grpcApi).ShouldNot(BeNil())
 			response, err := grpcApi.ListRoadmap(ctx, req)
 			Expect(err).Should(BeNil())

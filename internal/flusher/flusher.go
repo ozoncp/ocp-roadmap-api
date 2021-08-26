@@ -30,7 +30,7 @@ func (f *Flush) Flush(entities []entity.Roadmap) []entity.Roadmap {
 	chunks := utils.SplitToBulks(entities, f.chunkSize)
 
 	for _, v := range chunks {
-		if e := f.repo.AddEntities(context.Background(), v); e != nil {
+		if _, e := f.repo.MultiCreateEntity(context.Background(), v); e != nil {
 			log.Fatalf("error while add entities, err: %s\n", e)
 		}
 	}

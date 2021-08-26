@@ -41,6 +41,7 @@ PHONY: .generate
 				--grpc-gateway_out=pkg/ocp-roadmap-api \
 				--grpc-gateway_opt=logtostderr=true \
 				--grpc-gateway_opt=paths=import \
+				--validate_out lang=go:pkg/ocp-roadmap-api \
 				--swagger_out=allow_merge=true,merge_file_name=api:swagger \
 				api/ocp-roadmap-api/ocp-roadmap-api.proto
 		mv pkg/ocp-roadmap-api/github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api/* pkg/ocp-roadmap-api/
@@ -69,6 +70,10 @@ vendor-proto: .vendor-proto
 			mv vendor.protogen/googleapis/google/api vendor.protogen/google &&\
 			rm -rf vendor.protogen/googleapis ;\
 		fi
+		@if [ ! -d vendor.protogen/github.com/envoyproxy ]; then \
+			mkdir -p vendor.protogen/github.com/envoyproxy &&\
+			git clone https://github.com/envoyproxy/protoc-gen-validate vendor.protogen/github.com/envoyproxy/protoc-gen-validate ;\
+		fi
 
 
 .PHONY: deps
@@ -85,5 +90,7 @@ install-go-deps: .install-go-deps
 		go get -u github.com/golang/protobuf/protoc-gen-go
 		go get -u google.golang.org/grpc
 		go get -u google.golang.org/grpc/cmd/protoc-gen-go-grpc
+		go get -u github.com/envoyproxy/protoc-gen-validate
 		go install google.golang.org/grpc/cmd/protoc-gen-go-grpc
 		go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+		go install github.com/envoyproxy/protoc-gen-validate

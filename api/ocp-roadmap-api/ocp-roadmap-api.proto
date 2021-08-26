@@ -2,6 +2,7 @@ syntax="proto3";
 
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
+import "github.com/envoyproxy/protoc-gen-validate/validate/validate.proto";
 
 package ocp.roadmap.api;
 
@@ -11,6 +12,20 @@ service OcpRoadmapApi {
   rpc CreateRoadmap(CreateRoadmapRequest) returns (CreateRoadmapResponse) {
     option (google.api.http) = {
       post: "/roadmap"
+      body: "*"
+    };
+  }
+
+  rpc MultiCreateRoadmaps(MultiCreateRoadmapRequest) returns (MultiCreateRoadmapResponse) {
+    option (google.api.http) = {
+      post: "/roadmaps"
+      body: "*"
+    };
+  }
+
+  rpc UpdateRoadmap(UpdateRoadmapRequest) returns (UpdateRoadmapResponse) {
+    option (google.api.http) = {
+      put: "/roadmap/{id}"
       body: "*"
     };
   }
@@ -35,8 +50,8 @@ service OcpRoadmapApi {
 }
 
 message Roadmap {
-  uint64 id = 1;
-  uint64 userId = 2;
+  uint64 id = 1 [(validate.rules).uint64.gt = 0];;
+  uint64 userId = 2 [(validate.rules).uint64.gt = 0];;
   string link = 3;
   google.protobuf.Timestamp createdAt = 4;
 }
@@ -45,6 +60,25 @@ message CreateRoadmapRequest {
   Roadmap roadmap = 1;
 }
 message CreateRoadmapResponse {
+  uint64 roadmap_id = 1;
+}
+
+message UpdateRoadmapRequest {
+  uint64 id = 1;
+  uint64 userId = 2;
+  string link = 3;
+  google.protobuf.Timestamp createdAt = 4;
+}
+
+message UpdateRoadmapResponse {
+  bool updated = 1;
+}
+
+message MultiCreateRoadmapRequest {
+  repeated Roadmap roadmaps = 1;
+}
+message MultiCreateRoadmapResponse {
+  repeated uint64 roadmaps_ids = 1;
 }
 
 message DescribeRoadmapRequest {

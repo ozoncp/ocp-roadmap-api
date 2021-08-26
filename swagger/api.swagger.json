@@ -137,6 +137,75 @@
         "tags": [
           "OcpRoadmapApi"
         ]
+      },
+      "put": {
+        "operationId": "OcpRoadmapApi_UpdateRoadmap",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiUpdateRoadmapResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "type": "string",
+            "format": "uint64"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiUpdateRoadmapRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OcpRoadmapApi"
+        ]
+      }
+    },
+    "/roadmaps": {
+      "post": {
+        "operationId": "OcpRoadmapApi_MultiCreateRoadmaps",
+        "responses": {
+          "200": {
+            "description": "A successful response.",
+            "schema": {
+              "$ref": "#/definitions/apiMultiCreateRoadmapResponse"
+            }
+          },
+          "default": {
+            "description": "An unexpected error response.",
+            "schema": {
+              "$ref": "#/definitions/runtimeError"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/apiMultiCreateRoadmapRequest"
+            }
+          }
+        ],
+        "tags": [
+          "OcpRoadmapApi"
+        ]
       }
     }
   },
@@ -150,7 +219,13 @@
       }
     },
     "apiCreateRoadmapResponse": {
-      "type": "object"
+      "type": "object",
+      "properties": {
+        "roadmap_id": {
+          "type": "string",
+          "format": "uint64"
+        }
+      }
     },
     "apiDescribeRoadmapResponse": {
       "type": "object",
@@ -167,6 +242,29 @@
           "type": "array",
           "items": {
             "$ref": "#/definitions/apiRoadmap"
+          }
+        }
+      }
+    },
+    "apiMultiCreateRoadmapRequest": {
+      "type": "object",
+      "properties": {
+        "roadmaps": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/apiRoadmap"
+          }
+        }
+      }
+    },
+    "apiMultiCreateRoadmapResponse": {
+      "type": "object",
+      "properties": {
+        "roadmaps_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uint64"
           }
         }
       }
@@ -196,6 +294,34 @@
         "createdAt": {
           "type": "string",
           "format": "date-time"
+        }
+      }
+    },
+    "apiUpdateRoadmapRequest": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "userId": {
+          "type": "string",
+          "format": "uint64"
+        },
+        "link": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "apiUpdateRoadmapResponse": {
+      "type": "object",
+      "properties": {
+        "updated": {
+          "type": "boolean"
         }
       }
     },
