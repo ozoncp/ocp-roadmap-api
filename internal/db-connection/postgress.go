@@ -2,13 +2,25 @@ package db_connection
 
 import (
 	"context"
+	"fmt"
 	"github.com/jmoiron/sqlx"
 	_ "github.com/lib/pq"
+	"github.com/ozoncp/ocp-roadmap-api/internal/config"
 	"github.com/rs/zerolog/log"
 )
 
 func Connection(ctx context.Context) *sqlx.DB {
-	dsn := "host=0.0.0.0 port=5432 user=root password=root dbname=postgres sslmode=disable"
+	settings := config.GetConfig().Database
+
+	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
+		settings.Host,
+		settings.Port,
+		settings.User,
+		settings.Password,
+		settings.DbName,
+		settings.SSLMode,
+	)
+
 	connect, err := sqlx.ConnectContext(ctx, "postgres", dsn)
 	if err != nil {
 		log.Error().Err(err).Msg("error while connection to db")

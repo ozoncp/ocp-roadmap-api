@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/jmoiron/sqlx"
 	"github.com/ozoncp/ocp-roadmap-api/internal/api"
+	cnfg "github.com/ozoncp/ocp-roadmap-api/internal/config"
 	db_connection "github.com/ozoncp/ocp-roadmap-api/internal/db-connection"
 	"github.com/ozoncp/ocp-roadmap-api/internal/kafka"
 	"github.com/ozoncp/ocp-roadmap-api/internal/metric"
@@ -21,12 +23,11 @@ import (
 	"syscall"
 )
 
-const (
-	grpcPort           = ":82"
-	grpcServerEndpoint = "localhost:82"
-)
+var config *cnfg.Config
 
 func main() {
+	config = cnfg.GetConfig()
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -88,7 +89,7 @@ func kafkaProducer() kafka.Producer {
 }
 
 func runGRPC(conn *sqlx.DB, producer kafka.Producer) (*grpc.Server, net.Listener) {
-	listen, err := net.Listen("tcp", grpcPort)
+	listen, err := net.Listen("tcp", fmt.Sprintf(":%d", config.GRPC.Port))
 	if err != nil {
 		log.Fatal().Msgf("failed to listen: %v", err)
 	}
@@ -104,13 +105,13 @@ func runJSON(ctx context.Context) *http.Server {
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 
-	err := ocp_roadmap_api.RegisterOcpRoadmapApiHandlerFromEndpoint(ctx, mux, grpcServerEndpoint, opts)
+	err := ocp_roadmap_api.RegisterOcpRoadmapApiHandlerFromEndpoint(ctx, mux, config.REST.Endpoint, opts)
 	if err != nil {
 		panic(err)
 	}
 
 	srv := &http.Server{
-		Addr:    ":8081",
+		Addr:    fmt.Sprintf(":%d", config.REST.Port),
 		Handler: mux,
 	}
 	return srv
@@ -118,10 +119,10 @@ func runJSON(ctx context.Context) *http.Server {
 
 func metricsSRV() *http.Server {
 	sm := http.NewServeMux()
-	sm.Handle("/metrics", promhttp.Handler())
+	sm.Handle(config.Metrics.Handle, promhttp.Handler())
 
 	srv := &http.Server{
-		Addr:    ":9100",
+		Addr:    fmt.Sprintf(":%d", config.Metrics.Port),
 		Handler: sm,
 	}
 

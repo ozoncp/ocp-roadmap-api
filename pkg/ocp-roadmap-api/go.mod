@@ -3,6 +3,7 @@ module github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api
 go 1.16
 
 require (
+	github.com/envoyproxy/protoc-gen-validate v0.1.0
 	github.com/golang/protobuf v1.5.2
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	google.golang.org/genproto v0.0.0-20210813162853-db860fec028c

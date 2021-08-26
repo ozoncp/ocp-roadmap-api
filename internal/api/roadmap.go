@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/opentracing/opentracing-go"
+	cnfg "github.com/ozoncp/ocp-roadmap-api/internal/config"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
 	"github.com/ozoncp/ocp-roadmap-api/internal/kafka"
 	"github.com/ozoncp/ocp-roadmap-api/internal/metric"
@@ -11,6 +12,8 @@ import (
 	"github.com/ozoncp/ocp-roadmap-api/internal/utils"
 	ocp_roadmap_api "github.com/ozoncp/ocp-roadmap-api/pkg/ocp-roadmap-api"
 	"github.com/rs/zerolog/log"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"unsafe"
 )
 
@@ -25,6 +28,10 @@ func NewRoadmapAPI(repo repo.Repo, producer kafka.Producer) ocp_roadmap_api.OcpR
 }
 
 func (r *RoadmapAPI) UpdateRoadmap(ctx context.Context, request *ocp_roadmap_api.UpdateRoadmapRequest) (*ocp_roadmap_api.UpdateRoadmapResponse, error) {
+	if err := request.Validate(); err != nil {
+		log.Error().Err(err).Msg("invalid data")
+		return nil, status.Error(codes.InvalidArgument, err.Error())
+	}
 	response := &ocp_roadmap_api.UpdateRoadmapResponse{}
 	roadmap := *entity.NewRoadMap(request.Id, request.UserId, request.Link, request.CreatedAt.AsTime())
 	updated, err := r.repository.UpdateEntity(ctx, roadmap)
@@ -50,7 +57,7 @@ func (r *RoadmapAPI) MultiCreateRoadmaps(ctx context.Context, request *ocp_roadm
 	}
 
 	response := &ocp_roadmap_api.MultiCreateRoadmapResponse{}
-	bulks := utils.SplitToBulks(data, 3)
+	bulks := utils.SplitToBulks(data, cnfg.GetConfig().Roadmap.ButchSize)
 	for i := 0; i < len(bulks); i++ {
 		size := fmt.Sprintf("Size bulk is %d bytes", unsafe.Sizeof(bulks[i]))
 		childSpan := tracer.StartSpan(fmt.Sprintf("MultiCreateRoadmaps_#%d", i), opentracing.ChildOf(span.Context()))
