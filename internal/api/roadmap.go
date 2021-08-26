@@ -57,7 +57,7 @@ func (r *RoadmapAPI) MultiCreateRoadmaps(ctx context.Context, request *ocp_roadm
 	}
 
 	response := &ocp_roadmap_api.MultiCreateRoadmapResponse{}
-	bulks := utils.SplitToBulks(data, cnfg.GetConfig().Roadmap.ButchSize)
+	bulks := utils.SplitToBulks(data, cnfg.InitConfig(cnfg.CONFIG_NAME).Roadmap.ButchSize)
 	for i := 0; i < len(bulks); i++ {
 		size := fmt.Sprintf("Size bulk is %d bytes", unsafe.Sizeof(bulks[i]))
 		childSpan := tracer.StartSpan(fmt.Sprintf("MultiCreateRoadmaps_#%d", i), opentracing.ChildOf(span.Context()))

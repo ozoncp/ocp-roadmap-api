@@ -10,7 +10,7 @@ import (
 )
 
 func Connection(ctx context.Context) *sqlx.DB {
-	settings := config.GetConfig().Database
+	settings := config.InitConfig(config.CONFIG_NAME).Database
 
 	dsn := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		settings.Host,

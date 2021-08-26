@@ -9,6 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/ozoncp/ocp-roadmap-api/internal/api"
+	cnfg "github.com/ozoncp/ocp-roadmap-api/internal/config"
 	"github.com/ozoncp/ocp-roadmap-api/internal/entity"
 	"github.com/ozoncp/ocp-roadmap-api/internal/kafka"
 	"github.com/ozoncp/ocp-roadmap-api/internal/metric"
@@ -30,6 +31,7 @@ var _ = Describe("Roadmap", func() {
 
 		mProducer *mocks.MockProducer
 	)
+	cnfg.InitConfig("../../config.yml")
 
 	now := time.Now()
 	metric.InitMetrics()

@@ -26,7 +26,7 @@ import (
 var config *cnfg.Config
 
 func main() {
-	config = cnfg.GetConfig()
+	config = cnfg.InitConfig(cnfg.CONFIG_NAME)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, syscall.SIGINT, syscall.SIGTERM)

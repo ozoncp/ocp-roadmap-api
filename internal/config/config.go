@@ -7,7 +7,7 @@ import (
 	"sync"
 )
 
-const CONFIG = "config.yml"
+const CONFIG_NAME = "config.yml"
 
 var once sync.Once
 var instance *Config
@@ -70,6 +70,6 @@ func createConfig(path string) *Config {
 	return instance
 }
 
-func GetConfig() *Config {
-	return createConfig(CONFIG)
+func InitConfig(path string) *Config {
+	return createConfig(path)
 }
