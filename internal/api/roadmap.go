@@ -14,6 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"sync"
 	"unsafe"
 )
 
@@ -58,21 +59,28 @@ func (r *RoadmapAPI) MultiCreateRoadmaps(ctx context.Context, request *ocp_roadm
 
 	response := &ocp_roadmap_api.MultiCreateRoadmapResponse{}
 	bulks := utils.SplitToBulks(data, cnfg.InitConfig(cnfg.CONFIG_NAME).Roadmap.ButchSize)
+	var wg sync.WaitGroup
+
 	for i := 0; i < len(bulks); i++ {
-		size := fmt.Sprintf("Size bulk is %d bytes", unsafe.Sizeof(bulks[i]))
-		childSpan := tracer.StartSpan(fmt.Sprintf("MultiCreateRoadmaps_#%d", i), opentracing.ChildOf(span.Context()))
-		childSpan.SetTag("size", size)
+		wg.Add(1)
+		go func(i int) {
+			fmt.Printf("start #%d\n", i)
+			size := fmt.Sprintf("Size bulk is %d bytes", unsafe.Sizeof(bulks[i]))
+			childSpan := tracer.StartSpan(fmt.Sprintf("MultiCreateRoadmaps_#%d", i), opentracing.ChildOf(span.Context()))
+			childSpan.SetTag("size", size)
 
-		ids, err := r.repository.MultiCreateEntity(ctx, bulks[i])
-		if err != nil {
-			log.Error().Msgf("error while multi create roadmap, err: %v", err)
+			ids, err := r.repository.MultiCreateEntity(ctx, bulks[i])
+			if err != nil {
+				log.Error().Msgf("error while multi create roadmap, err: %v", err)
+				childSpan.Finish()
+			}
 			childSpan.Finish()
-			return response, err
-		}
-		childSpan.Finish()
 
-		response.RoadmapsIds = append(response.RoadmapsIds, ids...)
+			response.RoadmapsIds = append(response.RoadmapsIds, ids...)
+			wg.Done()
+		}(i)
 	}
+	wg.Wait()
 
 	return response, nil
 }

@@ -47,7 +47,14 @@ var _ = Describe("Roadmap", func() {
 	Context("Test Roadmap Add Multiply Entities", func() {
 		var req *ocp_roadmap_api.MultiCreateRoadmapRequest
 		data := []entity.Roadmap{
-			{1, 2, "https://some-link-test.com", now},
+			//{1, 2, "https://some-link-test.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
+			{1, 4, "https://some-link-test-2.com", now},
 			{1, 4, "https://some-link-test-2.com", now},
 		}
 		BeforeEach(func() {
@@ -68,10 +75,38 @@ var _ = Describe("Roadmap", func() {
 			rows := sqlmock.NewRows([]string{"id"}).
 				AddRow(1).
 				AddRow(2)
-
 			mock.ExpectQuery("INSERT INTO roadmap").
-				WithArgs(roadMaps[0].UserId, roadMaps[0].Link, roadMaps[0].CreatedAt.AsTime(), roadMaps[1].UserId, roadMaps[1].Link, roadMaps[1].CreatedAt.AsTime()).
+				WithArgs(roadMaps[0].UserId, roadMaps[0].Link, roadMaps[0].CreatedAt.AsTime(),
+					roadMaps[1].UserId, roadMaps[1].Link, roadMaps[1].CreatedAt.AsTime(),
+				).
 				WillReturnRows(rows)
+
+			rows2 := sqlmock.NewRows([]string{"id"}).
+				AddRow(3).
+				AddRow(4)
+			mock.ExpectQuery("INSERT INTO roadmap").
+				WithArgs(roadMaps[2].UserId, roadMaps[2].Link, roadMaps[2].CreatedAt.AsTime(),
+					roadMaps[3].UserId, roadMaps[3].Link, roadMaps[3].CreatedAt.AsTime(),
+				).
+				WillReturnRows(rows2)
+
+			rows3 := sqlmock.NewRows([]string{"id"}).
+				AddRow(5).
+				AddRow(6)
+			mock.ExpectQuery("INSERT INTO roadmap").
+				WithArgs(roadMaps[4].UserId, roadMaps[4].Link, roadMaps[4].CreatedAt.AsTime(),
+					roadMaps[5].UserId, roadMaps[5].Link, roadMaps[5].CreatedAt.AsTime(),
+				).
+				WillReturnRows(rows3)
+
+			rows4 := sqlmock.NewRows([]string{"id"}).
+				AddRow(7).
+				AddRow(8)
+			mock.ExpectQuery("INSERT INTO roadmap").
+				WithArgs(roadMaps[7].UserId, roadMaps[7].Link, roadMaps[7].CreatedAt.AsTime(),
+					roadMaps[6].UserId, roadMaps[6].Link, roadMaps[6].CreatedAt.AsTime(),
+				).
+				WillReturnRows(rows4)
 
 		})
 
@@ -82,7 +117,7 @@ var _ = Describe("Roadmap", func() {
 			response, err := grpcApi.MultiCreateRoadmaps(ctx, req)
 			Expect(err).Should(BeNil())
 			Expect(response).ShouldNot(BeNil())
-			Expect(len(response.RoadmapsIds)).Should(BeEquivalentTo(2))
+			Expect(len(response.RoadmapsIds)).Should(BeEquivalentTo(8))
 		})
 	})
 
@@ -176,7 +211,7 @@ var _ = Describe("Roadmap", func() {
 
 	AfterEach(func() {
 		mock.ExpectClose()
-		err := db.Close()
-		Expect(err).Should(BeNil())
+		//err := db.Close()
+		//Expect(err).Should(BeNil())
 	})
 })
